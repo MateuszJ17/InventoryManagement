@@ -27,6 +27,7 @@ public class InventoryManagementDbContext : Microsoft.EntityFrameworkCore.DbCont
         {
             e.HasKey(x => x.OrderId);
             e.Property(x => x.OrderId).ValueGeneratedOnAdd();
+            e.Property(x => x.TotalValue).IsRequired();
             e.HasMany<Product>(x => x.Products).WithMany();
             e.HasOne<Customer>().WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
         });

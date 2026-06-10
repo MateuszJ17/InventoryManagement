@@ -1,4 +1,5 @@
 using InventoryManagement.Database.DbContext;
+using InventoryManagement.Database.Seeder;
 using InventoryManagement.Features.Orders.CalculateDiscount;
 using InventoryManagement.Features.Orders.CalculatePrice;
 using InventoryManagement.Infrastructure.Date;
@@ -35,6 +36,8 @@ try
     builder.Services.AddProblemDetails();
 
     var app = builder.Build();
+
+    await app.MigrateAndSeedAsync();
 
     if (app.Environment.IsDevelopment())
     {
