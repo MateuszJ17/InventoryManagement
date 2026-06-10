@@ -26,6 +26,12 @@ public class GlobalExceptionHandler : IExceptionHandler
                 Title = "Customer not found",
                 Detail = exception.Message
             },
+            ProductNotFoundException => new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Title = "Product not found",
+                Detail = exception.Message
+            },
             _ => new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,
