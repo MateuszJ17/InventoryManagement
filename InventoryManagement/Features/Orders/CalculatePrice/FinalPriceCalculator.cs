@@ -2,7 +2,10 @@ using InventoryManagement.Features.Orders.CalculateDiscount;
 
 namespace InventoryManagement.Features.Orders.CalculatePrice;
 
-public class FinalPriceCalculator(IDiscountCalculator discountCalculator) : IFinalPriceCalculator
+public class FinalPriceCalculator(
+    IDiscountCalculator discountCalculator,
+    ILogger<FinalPriceCalculator> logger)
+    : IFinalPriceCalculator
 {
     public decimal CalculateFinalPrice(
         decimal originalTotal,
@@ -12,6 +15,9 @@ public class FinalPriceCalculator(IDiscountCalculator discountCalculator) : IFin
         IReadOnlyCollection<decimal> productPrices)
     {
         var multiplier = GetRegionalMultiplier(regionalCode);
+        
+        logger.LogInformation("Regional multiplier: {Multiplier}", multiplier);
+        
         var regionAdjustedPrices = productPrices.Select(p => p * multiplier).ToList();
         var regionAdjustedTotal = regionAdjustedPrices.Sum();
 

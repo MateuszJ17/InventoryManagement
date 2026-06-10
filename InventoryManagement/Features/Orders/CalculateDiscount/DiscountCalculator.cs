@@ -1,6 +1,8 @@
 namespace InventoryManagement.Features.Orders.CalculateDiscount;
 
-public class DiscountCalculator(IHolidaysDaysProvider holidaysDaysProvider) : IDiscountCalculator
+public class DiscountCalculator(
+    IHolidaysDaysProvider holidaysDaysProvider,
+    ILogger<DiscountCalculator> logger) : IDiscountCalculator
 {
     public decimal CalculateDiscount(int unitsPurchased, IReadOnlyCollection<decimal> productPrices, DateOnly date)
     {
@@ -25,11 +27,18 @@ public class DiscountCalculator(IHolidaysDaysProvider holidaysDaysProvider) : ID
     {
 
         if (holidaysDaysProvider.IsBlackFriday(date))
+        {
+            logger.LogInformation("Black Friday discount");
             return 0.25m;
+        }
 
         if (holidaysDaysProvider.GetHolidays(date.Year).Contains(date))
+        {
+            logger.LogInformation("Holiday discount");
             return productPrices.Max() / productPrices.Sum() * 0.15m;
+        }
 
+        logger.LogInformation("No discount");
         return 0m;
     }
 }
