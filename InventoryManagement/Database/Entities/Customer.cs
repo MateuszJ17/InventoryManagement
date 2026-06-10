@@ -1,3 +1,8 @@
 namespace InventoryManagement.Database.Entities;
 
-public record Customer(Guid CustomerId, string Name, string CountryCode);
+public class Customer(Guid customerId, string name, string regionalCode)
+{
+    public Guid CustomerId { get; set; } = customerId;
+    public string Name { get; set; } = name;
+    public string RegionalCode { get; set; } = regionalCode;
+}

@@ -1,4 +1,10 @@
 using InventoryManagement.Database.DbContext;
+using InventoryManagement.Features.Orders.CalculateDiscount;
+using InventoryManagement.Features.Orders.CalculatePrice;
+using InventoryManagement.Infrastructure.Date;
+using InventoryManagement.Infrastructure.Exceptions;
+using InventoryManagement.Infrastructure.Validation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,8 +15,13 @@ builder.Services.AddDbContext<InventoryManagementDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString(InventoryManagementDbContext.ConnectionStringName)));
 
 builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<Program>());
-
-// TODO: add validation behavior, global exception handler;
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+builder.Services.AddScoped<IDateProvider, DateProvider>();
+builder.Services.AddScoped<IHolidaysDaysProvider, HolidaysDaysProvider>();
+builder.Services.AddScoped<IDiscountCalculator, DiscountCalculator>();
+builder.Services.AddScoped<IFinalPriceCalculator, FinalPriceCalculator>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -20,6 +31,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseExceptionHandler();
 
 app.Run();

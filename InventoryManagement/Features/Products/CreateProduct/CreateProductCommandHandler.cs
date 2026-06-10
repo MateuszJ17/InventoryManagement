@@ -13,6 +13,7 @@ public class CreateProductCommandHandler(InventoryManagementDbContext dbContext)
         
         var newProduct = new Product(request.ProductId, request.Name, request.Description, request.Price, request.Stock);
         var insertResult = await dbContext.Products.AddAsync(newProduct, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return insertResult.Entity.ProductId;
     }

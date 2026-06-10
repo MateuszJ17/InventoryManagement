@@ -27,7 +27,7 @@ public class InventoryManagementDbContext : Microsoft.EntityFrameworkCore.DbCont
         {
             e.HasKey(x => x.OrderId);
             e.Property(x => x.OrderId).ValueGeneratedOnAdd();
-            e.HasMany<Product>().WithMany();
+            e.HasMany<Product>(x => x.Products).WithMany();
             e.HasOne<Customer>().WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -36,7 +36,7 @@ public class InventoryManagementDbContext : Microsoft.EntityFrameworkCore.DbCont
             e.HasKey(x => x.CustomerId);
             e.Property(x => x.CustomerId).ValueGeneratedOnAdd();
             e.Property(x => x.Name).IsRequired().HasMaxLength(50);
-            e.Property(x => x.CountryCode).IsRequired().HasMaxLength(2);
+            e.Property(x => x.RegionalCode).IsRequired().HasMaxLength(2);
         });
     }
 }

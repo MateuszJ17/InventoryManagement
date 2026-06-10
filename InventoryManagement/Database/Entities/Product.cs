@@ -1,3 +1,10 @@
 namespace InventoryManagement.Database.Entities;
 
-public record Product(Guid ProductId, string Name, string Description, decimal Price, int Stock);
+public class Product(Guid productId, string name, string description, decimal price, int stock)
+{
+    public Guid ProductId { get; set; } = productId;
+    public string Name { get; set; } = name;
+    public string Description { get; set; } = description;
+    public decimal Price { get; set; } = price;
+    public int Stock { get; set; } = stock;
+}
