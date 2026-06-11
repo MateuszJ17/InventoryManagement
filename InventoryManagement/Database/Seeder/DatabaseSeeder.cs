@@ -28,10 +28,10 @@ public static class DatabaseSeeder
 
         List<Product> products =
         [
-            new("Macbook Pro 15", "Macbook with 15 inch display", 1400m, 50),
-            new("Wireless mouse", "Wireless mouse with long battery life", 15m, 150),
-            new("Mechanical keyboard", "Mechanical keyboard with RGB lighting (most important piece)", 150m, 5),
-            new("Gaming monitor", "144p monitor with 144 HZ refresh rate", 500m, 15)
+            new("Macbook Pro 15", "Macbook", 1400m, 50),
+            new("Wireless mouse", "Wireless", 15m, 150),
+            new("Mechanical keyboard", "Mechanical keyboard", 150m, 5),
+            new("Gaming monitor", "144p with 144 HZ refresh rate", 500m, 15)
         ];
 
         await dbContext.Customers.AddRangeAsync(customers);

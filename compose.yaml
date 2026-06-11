@@ -5,10 +5,12 @@
       context: .
       dockerfile: InventoryManagement/Dockerfile
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__InventoryManagementDb: "Server=postgres;Port=5432;Database=inventory_dev;User Id=inventory_user;Password=inventory_pass"
     ports:
       - "8080:8080"
-      - "8081:8081"
       
   postgres:
     image: postgres:17-alpine
@@ -21,6 +23,11 @@
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inventory_user -d inventory_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

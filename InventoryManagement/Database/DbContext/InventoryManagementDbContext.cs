@@ -6,7 +6,12 @@ namespace InventoryManagement.Database.DbContext;
 public class InventoryManagementDbContext : Microsoft.EntityFrameworkCore.DbContext
 {
     public const string ConnectionStringName = "InventoryManagementDb";
-    
+
+    public InventoryManagementDbContext(DbContextOptions<InventoryManagementDbContext> options)
+        : base(options)
+    {
+    }
+
     public DbSet<Product> Products { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<Customer> Customers { get; set; }

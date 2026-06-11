@@ -1,5 +1,8 @@
+using FluentValidation;
 using InventoryManagement.Database.DbContext;
 using InventoryManagement.Database.Seeder;
+using InventoryManagement.Features.Orders.CreateOrder;
+using InventoryManagement.Features.Products.CreateProduct;
 using InventoryManagement.Features.Orders.CalculateDiscount;
 using InventoryManagement.Features.Orders.CalculatePrice;
 using InventoryManagement.Infrastructure.Date;
@@ -22,12 +25,15 @@ try
             .ReadFrom.Services(services));
 
     builder.Services.AddOpenApi();
+    builder.Services.AddControllers();
 
     builder.Services.AddDbContext<InventoryManagementDbContext>(options =>
         options.UseNpgsql(builder.Configuration.GetConnectionString(InventoryManagementDbContext.ConnectionStringName)));
 
     builder.Services.AddMediatR(x => x.RegisterServicesFromAssemblyContaining<Program>());
     builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+    builder.Services.AddScoped<IValidator<CreateProductCommand>, CreateProductCommandValidator>();
+    builder.Services.AddScoped<IValidator<CreateOrderCommand>, CreateOrderCommandValidator>();
     builder.Services.AddScoped<IDateProvider, DateProvider>();
     builder.Services.AddScoped<IHolidaysDaysProvider, HolidaysDaysProvider>();
     builder.Services.AddScoped<IDiscountCalculator, DiscountCalculator>();
@@ -37,7 +43,10 @@ try
 
     var app = builder.Build();
 
-    await app.MigrateAndSeedAsync();
+    if (!app.Environment.IsEnvironment("Testing"))
+    {
+        await app.MigrateAndSeedAsync();
+    }
 
     if (app.Environment.IsDevelopment())
     {
@@ -46,10 +55,11 @@ try
 
     app.UseHttpsRedirection();
     app.UseExceptionHandler();
+    app.MapControllers();
 
     app.Run();
 }
-catch (Exception ex)
+catch (Exception ex) when (ex is not HostAbortedException) // when clause needed because of test host shenanigans
 {
     Log.Fatal(ex, "Application failed unexpectedly during startup");
 }
@@ -57,4 +67,7 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// needed for integration tests
+public partial class Program;
 
