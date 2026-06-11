@@ -17,11 +17,8 @@ public class CreateOrderCommandHandler(
 {
     public async Task<CreateOrderValue?> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        var products = await dbContext.Products
-            .Where(x => request.ProductsIds.Contains(x.ProductId))
-            .ToDictionaryAsync(x => x.ProductId, x => x, cancellationToken);
-        
         var customer = await dbContext.Customers
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.CustomerId == request.CustomerId, cancellationToken);
 
         if (customer is null)
@@ -29,25 +26,36 @@ public class CreateOrderCommandHandler(
             logger.LogError("Customer not found: {CustomerId}", request.CustomerId);
             throw new CustomerNotFoundException(request.CustomerId);
         }
+        
+        var products = await dbContext.Products
+            .Where(x => request.ProductsIds.Contains(x.ProductId))
+            .ToDictionaryAsync(x => x.ProductId, x => x, cancellationToken);
 
-        foreach (var productId in request.ProductsIds)
+        var productsQuantities = request.ProductsIds
+            .GroupBy(productId => productId)
+            .ToDictionary(group => group.Key, group => group.Count());
+
+        foreach (var productsQuantity in productsQuantities)
         {
-            if (!products.TryGetValue(productId, out var product))
+            if (!products.TryGetValue(productsQuantity.Key, out var product))
             {
-                logger.LogWarning("Product {ProductId} not found in inventory", productId);
-                throw new ProductNotFoundException(productId);
+                logger.LogWarning("Product {ProductId} not found in inventory", productsQuantity.Key);
+                throw new ProductNotFoundException(productsQuantity.Key);
             }
-            
-            if (product.Stock < 1)
+
+            if (product.Stock < productsQuantity.Value)
             {
-                logger.LogWarning("Product {ProductId} has stock too low to place order", productId);
+                logger.LogWarning("Product {ProductId} has stock too low to place order", productsQuantity.Key);
                 return null;
             }
-            
-            products[productId].Stock--;
         }
 
-        var prices = products.Values.Select(x => x.Price).ToArray();
+        foreach (var productsQuantity in productsQuantities)
+        {
+            products[productsQuantity.Key].Stock -= productsQuantity.Value;
+        }
+
+        var prices = request.ProductsIds.Select(productId => products[productId].Price).ToArray();
         var total = prices.Sum();
         var adjustedTotal = finalPriceCalculator.CalculateFinalPrice(
             total,

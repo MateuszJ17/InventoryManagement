@@ -10,9 +10,10 @@ public class GetAllProductsQueryHandler(InventoryManagementDbContext dbContext)
 {
     public async Task<IReadOnlyCollection<Product>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
     {
-        // TODO: add logging
+        var products = await dbContext.Products
+            .AsNoTracking()
+            .ToListAsync(cancellationToken: cancellationToken);
         
-        var products = await dbContext.Products.ToListAsync(cancellationToken: cancellationToken);
         return products;
     }
 }

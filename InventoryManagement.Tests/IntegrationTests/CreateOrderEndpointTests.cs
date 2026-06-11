@@ -58,6 +58,53 @@ public class CreateOrderEndpointTests(InventoryManagementWebApplicationFactory f
     }
 
     [Fact]
+    public async Task CreateOrder_WithDuplicateProductIds_DecrementsStockByQuantityAndChargesPerUnit()
+    {
+        var (customerId, productId) = await SeedCustomerAndProduct(stock: 5);
+
+        var request = new CreateOrderCommand(customerId, [productId, productId, productId]);
+        var response = await _client.PostAsJsonAsync("/orders", request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<CreateOrderValue>();
+
+        Assert.NotNull(result);
+        Assert.NotEqual(Guid.Empty, result.OrderId);
+        Assert.Equal(3000m, result.TotalValue);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<InventoryManagementDbContext>();
+
+        var stock = await db.Products
+            .Where(p => p.ProductId == productId)
+            .Select(p => p.Stock)
+            .FirstAsync();
+
+        Assert.Equal(2, stock);
+    }
+
+    [Fact]
+    public async Task CreateOrder_WithDuplicateProductIdsExceedingStock_ReturnsBadRequest()
+    {
+        var (customerId, productId) = await SeedCustomerAndProduct(stock: 2);
+
+        var request = new CreateOrderCommand(customerId, [productId, productId, productId]);
+        var response = await _client.PostAsJsonAsync("/orders", request);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<InventoryManagementDbContext>();
+
+        var stock = await db.Products
+            .Where(p => p.ProductId == productId)
+            .Select(p => p.Stock)
+            .FirstAsync();
+
+        Assert.Equal(2, stock);
+    }
+
+    [Fact]
     public async Task CreateOrder_WithEmptyProductIds_ReturnsBadRequest()
     {
         var customer = new Customer("Jane Doe", "US") { CustomerId = Guid.NewGuid() };
